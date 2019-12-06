@@ -1,26 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:meals_app/models/meal.dart';
 import 'package:meals_app/widgets/meal_item.dart';
 
-import '../dummy_data.dart';
-
-class CategoryMealsScreen extends StatelessWidget {
+class CategoryMealsScreen extends StatefulWidget {
   static const routeName = '/category-meals';
-  // final String categoryid;
-  // final String categoryTitle;
 
-  // CategoryMealsScreen(this.categoryid, this.categoryTitle);
+  final List<Meal> availableMeals;
+
+  CategoryMealsScreen(this.availableMeals);
+
+  @override
+  _CategoryMealsScreenState createState() => _CategoryMealsScreenState();
+}
+
+class _CategoryMealsScreenState extends State<CategoryMealsScreen> {
+  String categoryTitle;
+  List<Meal> categoryMeals;
+  var _loadedInitData = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_loadedInitData) {
+      final routeArgs =
+          ModalRoute.of(context).settings.arguments as Map<String, String>;
+      categoryTitle = routeArgs['title'];
+      final categoryid = routeArgs['id'];
+      categoryMeals = widget.availableMeals.where((meal) {
+        return meal.categories.contains(categoryid);
+      }).toList();
+      _loadedInitData = true;
+    }
+  }
+
+  void _removeMeal(String id) {
+    setState(() {
+      categoryMeals.removeWhere((item) => item.id == id);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final routeArgs =
-        ModalRoute.of(context).settings.arguments as Map<String, String>;
-
-    final categoryTitle = routeArgs['title'];
-    final categoryid = routeArgs['id'];
-    final categoryMeals = DUMMY_MEALS.where((meal) {
-      return meal.categories.contains(categoryid);
-    }).toList();
-
     return Scaffold(
       appBar: AppBar(
         title: Text(categoryTitle),
@@ -35,6 +55,7 @@ class CategoryMealsScreen extends StatelessWidget {
             complexity: meal.complexity,
             duration: meal.duration,
             imageUrl: meal.imageUrl,
+            removeItem: _removeMeal,
           );
         },
         itemCount: categoryMeals.length,
